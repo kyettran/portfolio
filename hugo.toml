@@ -1,32 +1,43 @@
-baseURL = 'https://kyettran.site/'
-languageCode = 'en-us'
-title = 'Kyet Tran'
-theme = 'PaperMod'
+baseURL = "https://kyettran.site/"
+languageCode = "en-us"
+title = "Kyet Tran | System Engineer"
+theme = "PaperMod"
 
 [pagination]
   pagerSize = 5
 
 [params]
   author = "Kyet Tran"
-  description = "DevOps | Backend | Linux"
+  description = "System Engineer | DevOps Learner | Linux • Docker • CI/CD"
+  keywords = ["DevOps", "Linux", "Docker", "Nginx", "CI/CD"]
   defaultTheme = "dark"
+  disableThemeToggle = false
 
   ShowReadingTime = true
   ShowShareButtons = false
   ShowPostNavLinks = true
   ShowBreadCrumbs = true
   ShowCodeCopyButtons = true
-
   ShowToc = false
 
-  [params.homeInfoParams]
-    Title = "Hi, I'm Kyet 👋"
-    Content = """
-DevOps Learner 🚀  
-Linux • Docker • Nginx • CI/CD  
-Building things step by step.
-"""
+  displayFullLangName = true
 
+# Homepage profile mode
+[params.profileMode]
+enabled = true
+title = "Kyet Tran"
+subtitle = "I'm a System Engineer & DevOps Learner 🚀"
+imageUrl = "images/avatar.jpeg"
+imageWidth = 160
+imageHeight = 160
+imageTitle = "Kyet Tran"
+
+buttons = [
+  { name = "Blog", url = "/posts" },
+  { name = "About Me", url = "/about" }
+]
+
+# Social Links
 [[params.socialIcons]]
 name = "github"
 url = "https://github.com/kyettran"
@@ -35,17 +46,15 @@ url = "https://github.com/kyettran"
 name = "linkedin"
 url = "https://www.linkedin.com/in/trankiet317/"
 
-[params.profileMode]
-enabled = true
-title = "Kyet Tran"
-subtitle = "I'm System Engineer - DevOps Learner 🚀"
-imageUrl = "images/avatar.jpeg"
-imageWidth = 150
-imageHeight = 150
-imageTitle = "Kyet Tran"
-
+# Menu
 [[menu.main]]
 identifier = "about"
 name = "About"
 url = "/about/"
 weight = 10
+
+[[menu.main]]
+identifier = "posts"
+name = "Blog"
+url = "/posts/"
+weight = 20
