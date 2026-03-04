@@ -1,332 +1,455 @@
-# 🚀 KyetTran.site — Full Deployment Documentation
+# 🚀 kyettran.site — Production-Grade System Documentation
 
-> Static Portfolio Website built with Hugo + PaperMod
+> Static portfolio website
+> Built with Hugo (PaperMod theme)
 > CI/CD via GitHub Actions
-> Hosted on VPS with Nginx + HTTPS (Let's Encrypt)
+> Hosted on Ubuntu VPS
+> Served by Nginx
+> TLS via Let's Encrypt
+
+This document is written at **production-grade level**.
+Any engineer should be able to:
+
+* Rebuild the system
+* Operate it
+* Debug it
+* Understand its limitations
+* Extend it safely
 
 ---
 
-# 1️⃣ PROJECT OVERVIEW
+# 1️⃣ SYSTEM OVERVIEW
 
-This project is a static portfolio website.
+## 1.1 Purpose
 
-Tech stack:
+This system hosts a static portfolio website using a fully automated CI/CD pipeline.
 
-* Hugo (Static Site Generator)
-* PaperMod theme (Git submodule)
-* GitHub Actions (CI/CD)
-* VPS (Ubuntu)
-* Nginx (Web server)
-* Let's Encrypt (SSL)
-
-Deployment strategy:
-
-GitHub builds the site → uploads `/public` → VPS only serves static files.
+The VPS acts strictly as a static file server.
+All build logic occurs in CI.
 
 ---
 
-# 2️⃣ SERVER SETUP (VPS)
+## 1.2 High-Level Architecture
 
-## 2.1 Install Required Packages
+### 🌐 Runtime Flow
 
-```bash
-apt update
-apt install nginx git certbot python3-certbot-nginx -y
-```
-
----
-
-## 2.2 Project Directory
-
-Website root:
-
-```
-/var/www/portfolio
-```
-
-Final static files served from:
-
-```
+```text id="flow001"
+Client
+  ↓
+DNS (A record → VPS Public IP)
+  ↓
+Ubuntu VPS
+  ↓
+Nginx (Port 443)
+  ↓
 /var/www/portfolio/public
+  ↓
+Static Response
 ```
 
 ---
 
-# 3️⃣ NGINX CONFIGURATION
+### 🚀 Deployment Flow
 
-Check config:
-
-```bash
-cat /etc/nginx/sites-enabled/default
+```text id="flow002"
+Local Git Commit
+  ↓
+Push to GitHub (main)
+  ↓
+GitHub Actions Triggered
+  ↓
+Checkout (with submodules)
+  ↓
+Install Hugo
+  ↓
+hugo --minify
+  ↓
+Generate /public
+  ↓
+SCP to VPS
+  ↓
+Nginx serves new version
 ```
 
-Must contain:
+---
 
+# 2️⃣ INFRASTRUCTURE DETAILS
+
+## 2.1 VPS Baseline
+
+* OS: Ubuntu LTS
+* Web server: Nginx
+* TLS: Certbot (Let's Encrypt)
+* Open ports: 22, 80, 443
+
+Recommended minimum:
+
+* 1 vCPU
+* 1 GB RAM
+* 20 GB Disk
+
+---
+
+## 2.2 Directory Layout (VPS)
+
+```text id="dir001"
+/var/www/
+└── portfolio/
+    └── public/
 ```
-server_name kyettran.site www.kyettran.site;
 
+Nginx root must match:
+
+```nginx id="nginxroot"
 root /var/www/portfolio/public;
-index index.html;
-```
-
-Reload nginx:
-
-```bash
-systemctl reload nginx
 ```
 
 ---
 
-# 4️⃣ SSL SETUP (HTTPS)
+## 2.3 Repository Layout
 
-Command used:
-
-```bash
-certbot --nginx -d kyettran.site -d www.kyettran.site
-```
-
-Selected:
-
-```
-2 (Redirect HTTP → HTTPS)
-```
-
-Auto-renew tested:
-
-```bash
-certbot renew --dry-run
-```
-
-Result:
-✔ SSL auto-renews automatically via system timer.
-
----
-
-# 5️⃣ HUGO PROJECT STRUCTURE
-
-```
+```text id="repo001"
 portfolio/
-├── archetypes/
 ├── content/
 ├── static/
 ├── themes/
 │   └── PaperMod (submodule)
 ├── hugo.toml
+├── .github/workflows/deploy.yml
 ├── .gitmodules
-└── .github/workflows/deploy.yml
+├── .gitignore
+└── README.md
 ```
 
-Important:
+`.gitignore` must include:
 
-❌ `public/` is NOT committed
-It is build output only.
-
----
-
-# 6️⃣ REMOVE public/ FROM GIT (IMPORTANT FIX)
-
-On local:
-
-```bash
-rm -rf public
-```
-
-Add to `.gitignore`:
-
-```
+```text id="gitignore001"
 public/
 ```
 
-Remove from git tracking:
-
-```bash
-git rm -r --cached public
-git commit -m "remove public folder"
-git push
-```
-
-Reason:
-
-`public/` is build output.
-CI/CD should generate it, not Git.
+`public/` is a build artifact and must never be committed.
 
 ---
 
-# 7️⃣ THEME FIX (SUBMODULE ISSUE)
+# 3️⃣ DEPLOYMENT PROCESS
 
-Problem:
+## 3.1 CI/CD Trigger
 
-Hugo build warning:
+Deployment occurs when:
 
-```
-found no layout file
-```
-
-Cause:
-Theme not loaded in GitHub Actions.
-
-Fix in `.github/workflows/deploy.yml`:
-
-```yaml
-- uses: actions/checkout@v4
-  with:
-    submodules: recursive
-```
-
-Now theme loads correctly.
+* Code is pushed to `main` branch.
 
 ---
 
-# 8️⃣ CI/CD PIPELINE (FINAL VERSION)
+## 3.2 Workflow Responsibilities
 
-Workflow:
+GitHub Actions performs:
 
-```
-git push
-   ↓
-GitHub Actions
-   ↓
-Checkout repo + submodules
-   ↓
-Install Hugo
-   ↓
+1. Checkout repository (with submodules)
+2. Install Hugo (version pinned)
+3. Run:
+
+```bash id="buildcmd"
 hugo --minify
-   ↓
-Upload public/ to VPS
-   ↓
-Nginx serves updated site
+```
+
+4. Upload `/public` to:
+
+```text id="deploypath"
+/var/www/portfolio/public
+```
+
+via SCP using SSH key authentication.
+
+---
+
+## 3.3 GitHub Secrets Required
+
+* VPS_HOST
+* VPS_USERNAME
+* VPS_SSH_KEY
+* (Optional) VPS_PORT
+
+Secrets must never be hardcoded.
+
+---
+
+## 3.4 Emergency Manual Deploy
+
+If CI fails:
+
+```bash id="manualdeploy"
+hugo --minify
+scp -r public/* user@VPS_IP:/var/www/portfolio/public
 ```
 
 ---
 
-# 9️⃣ GITHUB ACTIONS LOGIC
+# 4️⃣ NGINX CONFIGURATION
 
-Main steps:
+## 4.1 HTTP Redirect
 
-```yaml
-- uses: actions/checkout@v4
-  with:
-    submodules: recursive
-
-- uses: peaceiris/actions-hugo@v2
-
-- run: hugo --minify
-
-- uses: appleboy/scp-action@v0.1.7
-  with:
-    source: "public/*"
-    target: "/var/www/portfolio/public"
+```nginx id="nginxhttp"
+server {
+    listen 80;
+    server_name kyettran.site www.kyettran.site;
+    return 301 https://$host$request_uri;
+}
 ```
 
-Important:
+## 4.2 HTTPS Block
 
-VPS does NOT build Hugo anymore.
-GitHub builds everything.
+```nginx id="nginxhttps"
+server {
+    listen 443 ssl;
+    server_name kyettran.site www.kyettran.site;
+
+    root /var/www/portfolio/public;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    ssl_certificate /etc/letsencrypt/live/kyettran.site/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/kyettran.site/privkey.pem;
+}
+```
+
+Reload after change:
+
+```bash id="reloadnginx"
+systemctl reload nginx
+```
 
 ---
 
-# 🔟 HOW TO UPDATE WEBSITE
+# 5️⃣ SECURITY MODEL
 
-Whenever you want to:
+## 5.1 SSH Hardening
 
-* Change subtitle
-* Add blog post
-* Update avatar
-* Modify hugo.toml
-* Edit content
+Recommended configuration:
 
-Do:
+```text id="sshconfig"
+PasswordAuthentication no
+PermitRootLogin no
+```
 
-```bash
-git add .
-git commit -m "update content"
+Restart SSH:
+
+```bash id="restartssh"
+systemctl restart ssh
+```
+
+---
+
+## 5.2 Firewall
+
+```bash id="firewall"
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw enable
+```
+
+---
+
+## 5.3 File Permissions
+
+```bash id="permissions"
+chown -R www-data:www-data /var/www/portfolio/public
+chmod -R 755 /var/www/portfolio/public
+```
+
+---
+
+## 5.4 TLS
+
+Install:
+
+```bash id="certinstall"
+apt install certbot python3-certbot-nginx
+```
+
+Issue certificate:
+
+```bash id="certissue"
+certbot --nginx -d kyettran.site -d www.kyettran.site
+```
+
+Test renewal:
+
+```bash id="certrenew"
+certbot renew --dry-run
+```
+
+---
+
+# 6️⃣ LOGGING & OBSERVABILITY
+
+## 6.1 Log Locations
+
+```text id="logs"
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+```
+
+System logs:
+
+```bash id="journal"
+journalctl -u nginx
+```
+
+---
+
+## 6.2 What To Monitor
+
+* SSL expiration
+* Disk usage
+* Nginx status
+* SSH login attempts
+* CI/CD failure alerts
+
+---
+
+# 7️⃣ FAILURE HANDLING
+
+## 7.1 Website Down
+
+Debug order:
+
+1. DNS resolution
+2. VPS reachable?
+3. Nginx running?
+4. SSL valid?
+5. Correct root path?
+6. Logs check
+
+---
+
+## 7.2 GitHub Action Failure
+
+Common causes:
+
+* Submodule not fetched
+* Hugo build error
+* SSH key revoked
+* Permission denied
+
+---
+
+## 7.3 Rollback Strategy
+
+Option 1:
+
+```bash id="rollback1"
+git revert <commit>
 git push
 ```
 
-Wait ~20 seconds → website auto-updates.
+Option 2:
 
-No SSH needed.
-
----
-
-# 1️⃣1️⃣ COMMON TROUBLESHOOTING
-
-### Site not updating?
-
-* Check GitHub Actions log
-* Confirm build succeeded
-* Confirm SCP step succeeded
+Re-run last successful workflow.
 
 ---
 
-### Theme broken?
+# 8️⃣ EXTERNAL DEPENDENCIES
 
-* Check `submodules: recursive` exists
-* Check `.gitmodules` file
+System relies on:
 
----
+* GitHub (CI/CD)
+* VPS Provider
+* DNS Provider
+* Let's Encrypt
 
-### HTTPS not working?
-
-Check:
-
-```bash
-certbot renew --dry-run
-systemctl status nginx
-```
+If any external service fails, system availability may be impacted.
 
 ---
 
-# 1️⃣2️⃣ CURRENT PRODUCTION STATUS
+# 9️⃣ SINGLE POINTS OF FAILURE
 
-✔ HTTPS enabled
-✔ Auto-renew SSL
-✔ CI/CD automated
-✔ Hugo build on GitHub
-✔ VPS serving static files only
-✔ public/ removed from repo
-✔ Submodule working
+Current system has:
 
-System is production-ready.
+* Single VPS
+* Single region
+* Single CI pipeline
+* No CDN
+* No load balancer
+
+If VPS fails → site unavailable.
+
+This is acceptable for portfolio-level traffic.
 
 ---
 
-# 1️⃣3️⃣ FUTURE IMPROVEMENTS (NEXT PHASE)
+# 🔟 LIMITATIONS
 
-Possible upgrades:
+* No auto rollback
+* No monitoring alerts
+* No redundancy
+* No blue/green deployment
+* No infrastructure as code
 
-* Enable gzip / brotli
-* Add security headers
-* Enable cache-control headers
-* Add analytics
-* Add preview deployment branch
+---
+
+# 1️⃣1️⃣ MAINTENANCE PLAN
+
+Weekly:
+
+* Check SSL renewal
+* Check disk usage
+* Check logs
+
+Monthly:
+
+* Update system packages
+* Update Hugo version (carefully)
+* Update theme submodule
+
+---
+
+# 1️⃣2️⃣ FUTURE IMPROVEMENTS
+
+* Add CDN (e.g., Cloudflare)
 * Add staging environment
+* Add monitoring (UptimeRobot, Prometheus, etc.)
+* Add Infrastructure as Code (Terraform)
+* Add artifact versioning
+* Implement Blue/Green deployment
 
 ---
 
-# 🧠 ARCHITECTURE SUMMARY
+# 1️⃣3️⃣ REBUILD CHECKLIST
 
-This is now a clean DevOps-style static deployment system:
+If VPS is destroyed:
 
-GitHub = Builder
-VPS = Static file server
-Nginx = Web server
-Certbot = SSL automation
+1. Provision Ubuntu VPS
+2. Install Nginx
+3. Configure firewall
+4. Setup SSH keys
+5. Configure Nginx root path
+6. Setup Certbot
+7. Configure GitHub Secrets
+8. Push commit → auto deploy
 
-Simple. Stable. Scalable.
+System restored.
 
 ---
 
-# 📌 HOW TO DISCUSS FUTURE IMPROVEMENTS
+# 1️⃣4️⃣ SYSTEM MATURITY
 
-When asking ChatGPT about improvements, reference:
+This system demonstrates:
 
-* Current structure: GitHub builds, VPS serves
-* Path: `/var/www/portfolio/public`
-* Using Hugo + PaperMod
-* CI/CD via GitHub Actions
-* SSL via Certbot
+* Static site CI/CD pipeline
+* Secure file transfer
+* Reverse proxy configuration
+* TLS automation
+* Production-aware documentation
 
-This context ensures accurate advice.
+It is suitable for:
+
+* Personal portfolio
+* Low-traffic static website
+* DevOps learning environment
 
 ---
