@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Kyet Tran</title>
-    <link>https://kyettran.site/</link>
-    <description>Recent content on Kyet Tran</description>
+    <title>Kyet Tran | System Engineer</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on Kyet Tran | System Engineer</description>
     <generator>Hugo -- 0.157.0</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 04 Mar 2026 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://kyettran.site/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>About Me</title>
-      <link>https://kyettran.site/about/</link>
+      <link>http://localhost:1313/about/</link>
       <pubDate>Wed, 04 Mar 2026 00:00:00 +0000</pubDate>
-      <guid>https://kyettran.site/about/</guid>
+      <guid>http://localhost:1313/about/</guid>
       <description>&lt;h2 id=&#34;-welcome&#34;&gt;👋 Welcome&lt;/h2&gt;
 &lt;p&gt;I&amp;rsquo;m Kyet Tran. I&amp;rsquo;m learning DevOps.&lt;/p&gt;
 &lt;h3 id=&#34;-technical&#34;&gt;🔧 Technical&lt;/h3&gt;
@@ -27,9 +27,9 @@
     </item>
     <item>
       <title>Kyet Tran</title>
-      <link>https://kyettran.site/posts/first-post/</link>
+      <link>http://localhost:1313/posts/first-post/</link>
       <pubDate>Wed, 04 Mar 2026 00:00:00 +0000</pubDate>
-      <guid>https://kyettran.site/posts/first-post/</guid>
+      <guid>http://localhost:1313/posts/first-post/</guid>
       <description>&lt;p&gt;Welcome to Kyet Tran site 🚀&lt;/p&gt;</description>
     </item>
   </channel>
